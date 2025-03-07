@@ -3,6 +3,12 @@ const passport = require("passport");
 const dotenv = require("dotenv");
 const connectDB = require("./connect");
 const authRoutes = require("./routes/auth");
+const questionRoutes = require("./routes/questionRoutes");
+const answerRoutes = require("./routes/answerRoutes");
+const quizRoutes = require("./routes/quizRoutes");
+const resultRoutes = require("./routes/resultRoutes");
+const roleRoutes = require("./routes/roleRoutes");
+const quizTypeRoutes = require("./routes/quizTypeRoutes");
 const path = require('path');
 
 // Load environment variables
@@ -19,6 +25,12 @@ require("./config/passport");
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/questions', questionRoutes);
+app.use('/api/answers', answerRoutes);
+app.use('/api/quizzes', quizRoutes);
+app.use('/api/results', resultRoutes);
+app.use('/api/roles', roleRoutes);
+app.use('/api/quiz-types', quizTypeRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is running.....");
