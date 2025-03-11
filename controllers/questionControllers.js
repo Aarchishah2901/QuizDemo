@@ -45,7 +45,7 @@ exports.updateQuestion = async (req, res) => {
         const updatedQuestion = await Question.findByIdAndUpdate(req.params.id, req.body, {new: true});
         if (!updatedQuestion)
             return res.status(404).json({ message: "Question not found" });
-        res.status(200).json({ message: "Error updating question", question: updatedQuestion });
+        res.status(200).json({ message: "Question updated successfully", question: updatedQuestion });
     }
     catch (error)
     {

@@ -6,7 +6,7 @@ exports.createQuizType = async (req,res) => {
     try
     {
         const { quiztype_name } = req.body;
-        const existingQuiztpe = await QuizType.findOne({ quiztype_name });
+        const existingQuiztpe = await QuizType.findOne({ quiztype_name: req.body.quiztype_name });
         if ( existingQuiztpe)
             return res.status(400).json({ message: "Quiz type allready exists" });
 
@@ -50,7 +50,7 @@ exports.getQuizTypeById = async (req, res) => {
 exports.updateQuizType = async (req, res) => {
     try
     {
-        const updatedQuizType = await QuizType.findByIdAndUpdate(req.params.id, res.body, { new: true });
+        const updatedQuizType = await QuizType.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!updatedQuizType)
             return res.status(404).json({ message: "Quiz type not found" });
         res.status(200).json(updatedQuizType);

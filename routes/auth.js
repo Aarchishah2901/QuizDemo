@@ -27,7 +27,7 @@ router.post(
     try {
       console.log("Register API hit", req.body);
 
-      // ✅ Validate request body
+      // Validate request body
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -35,16 +35,16 @@ router.post(
 
       const { firstname, lastname, email, password, gender } = req.body;
 
-      // ✅ Check if email exists
+      // Check if email exists
       const existingUser = await User.findOne({ email });
       if (existingUser) {
         return res.status(400).json({ error: 'Email already exists' });
       }
 
-      // ✅ Hash password
+      // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // ✅ Create new user
+      // Create new user
       const newUser = new User({
         firstname,
         lastname,
@@ -73,7 +73,7 @@ router.post(
     try {
       console.log("Login attempt:", req.body.email);
 
-      // ✅ Validate request body
+      // Validate request body
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -81,19 +81,19 @@ router.post(
 
       const { email, password } = req.body;
 
-      // ✅ Check if user exists
+      // Check if user exists
       const user = await User.findOne({ email });
       if (!user) {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
-      // ✅ Compare passwords
+      // Compare passwords
       const passwordMatch = await bcrypt.compare(password, user.password);
       if (!passwordMatch) {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
-      // ✅ Generate JWT Token
+      // Generate JWT Token
       const token = jwt.sign(
         { id: user.id, email: user.email },
         process.env.JWT_SECRET,

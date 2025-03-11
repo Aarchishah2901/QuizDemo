@@ -13,9 +13,9 @@ const Result = require("./models/resultModel");
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/QuizDatabase";
 
 mongoose.connect(MONGO_URI)
-    .then(() => console.log("✅ MongoDB Connected Successfully!"))
+    .then(() => console.log("MongoDB Connected Successfully!"))
     .catch(err => {
-        console.error("❌ MongoDB Connection Failed:", err);
+        console.error("MongoDB Connection Failed:", err);
         process.exit(1);
     });
 
@@ -26,12 +26,12 @@ const seedDatabase = async () => {
         await Role.deleteMany({});
         await User.deleteMany({});
         await QuizType.deleteMany({});
-        await Question.deleteMany({});
+        await Question.deleteMany({}); 
         await Answer.deleteMany({});
         await Quiz.deleteMany({});
         await Result.deleteMany({});
 
-        console.log("✅ Old data deleted successfully!");
+        console.log("Old data deleted successfully!");
 
         const roles = await Role.insertMany([
             { role_type: "Admin" },
@@ -40,6 +40,7 @@ const seedDatabase = async () => {
 
         const users = await User.insertMany([
             {
+                user_id: users[0]._id,
                 firstname: "John",
                 lastname: "Doe",
                 phone_no: 1234567890,
@@ -73,24 +74,41 @@ const seedDatabase = async () => {
 
         const quizzes = await Quiz.insertMany([
             {
-                user_id: users[0]._id,
-                quiztype_name: quizTypes[0]._id,
-                question_id: questions[0]._id,
-                answer_id: answers[0]._id
+                // user_id: users[0]._id,
+                // quiztype_name: quizTypes[0]._id,
+                // question_id: questions[0]._id,
+                // answer_id: answers[0]._id
+                title: "General Knowledge Quiz",
+                description: "A quiz to test general knowledge skills.",
+                questions: [questions[0]._id, questions[1]._id], // Array of question IDs
             }
         ]);
 
         await Result.insertMany([
+            // {
+            //     user_id: users[0]._id,
+            //     question_id: questions[0]._id,
+            //     total_mark: 10
+            // }
             {
                 user_id: users[0]._id,
-                question_id: questions[0]._id,
-                total_mark: 10
+                quiz_id: quizzes[0]._id,
+                score: 8,
+                total_questions: 10,
+                correct_answers: 8,
+            },
+            {
+                user_id: users[1]._id,
+                quiz_id: quizzes[1]._id,
+                score: 6,
+                total_questions: 10,
+                correct_answers: 6,
             }
         ]);
 
-        console.log("✅ Database Seeded Successfully!");
+        console.log("Database Seeded Successfully!");
     } catch (error) {
-        console.error("❌ Seeding Failed:", error);
+        console.error("Seeding Failed:", error);
     } finally {
         mongoose.connection.close();
     }
