@@ -11,10 +11,10 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-router.post("/results", authMiddleware, submitResult); // Submit a result
-router.get("/results", authMiddleware, getAllResults); // Get all results
-router.get("/results/:resultID", authMiddleware, getResultById); // Get result by ID
-router.get("/results/user/:userID", authMiddleware, getResultsByUserId); // Get results by User ID
-router.delete("/results/:resultID", authMiddleware, deleteResult); // Delete a result
+router.post("/results", authMiddleware, submitResult);
+router.get("/results", authMiddleware, getAllResults);
+router.get("/results/:resultID", authMiddleware, getResultById);
+router.get("/results/user/:userID", authMiddleware, getResultsByUserId);
+router.delete("/results/:resultID", authMiddleware, deleteResult);
 
 module.exports = router;

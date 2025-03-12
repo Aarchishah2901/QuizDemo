@@ -34,7 +34,17 @@ router.post(
 );
 
 // Get User Details (Protected)
-// router.get('/user', passport.authenticate('jwt', { session: false }), authController.getUser);
 router.get('/user', authMiddleware, authController.getUser);
+
+router.get('/users', authMiddleware, roleMiddleware(['admin']), authController.getAllUsers);
+
+router.put('/user/:id', authMiddleware, [
+    body('firstname').optional().notEmpty().withMessage('First name is required'),
+    body('lastname').optional().notEmpty().withMessage('Last name is required'),
+    body('email').optional().isEmail().withMessage('Invalid email format'),
+    body('gender').optional().isIn(['Male', 'Female', 'Other']).withMessage('Invalid gender selection')
+], authController.updateUser);
+
+router.delete('/user/:id', authMiddleware, authController.deleteUser);
 
 module.exports = router;
