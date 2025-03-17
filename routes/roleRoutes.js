@@ -1,34 +1,14 @@
-// const express = require("express");
-// const { createRole, getRoles, getRoleById, updateRole, deleteRole } = require("../controllers/roleControllers");
-// const authMiddleware  = require("../middleware/authMiddleware");
-
-// const router = express.Router();
-
-// router.post("/roles", authMiddleware, createRole);
-// router.get("/roles", authMiddleware, getRoles);
-// router.get("/roles/:id", authMiddleware, getRoleById);
-// router.put("/roles/:id", authMiddleware, updateRole);
-// router.delete("/roles/:id", authMiddleware, deleteRole);
-
-// module.exports = router;
-
-const express = require("express");
-const {
-    createRole,
-    getAllRoles,
-    getRoleById,
-    updateRole,
-    deleteRole,
-} = require("../controllers/roleControllers");
-const authMiddleware  = require("../middleware/authMiddleware");
-
-
+const express = require('express');
 const router = express.Router();
+const roleController = require('../controllers/roleControllers'); // Corrected import
+const { verifyToken, checkRole } = require('../middleware/authMiddleware'); // Import only verifyToken
+const checkPermission = require('../middleware/roleMiddleware'); // Middleware for permissions
 
-router.post("/roles", authMiddleware, createRole);
-router.get("/roles", authMiddleware, getAllRoles);
-router.get("/roles/:roleID", authMiddleware, getRoleById);
-router.put("/roles/:roleID", authMiddleware, updateRole);
-router.delete("/roles/:roleID", authMiddleware, deleteRole);
+// Role Management Routes
+router.post('/create', verifyToken, checkPermission('manage_roles'), roleController.createRole);
+router.get('/all', verifyToken, checkPermission('view_roles'), roleController.getAllRoles);
+router.get('/:id', verifyToken, checkPermission('view_roles'), roleController.getRoleById);
+router.post('/assign', verifyToken, checkPermission('manage_roles'), roleController.assignRole);
+router.delete('/delete/:roleId', verifyToken, checkPermission('manage_roles'), roleController.deleteRole);
 
 module.exports = router;

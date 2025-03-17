@@ -1,5 +1,6 @@
 const Question = require("../models/questionModel");
 
+// ✅ Create Question
 exports.createQuestion = async (req, res) => {
     try {
         const { question_text, quiztype_id, options, correct_answer } = req.body;
@@ -15,52 +16,111 @@ exports.createQuestion = async (req, res) => {
         const newQuestion = new Question({ question_text, quiztype_id, options, correct_answer });
         await newQuestion.save();
 
-        res.status(201).json(newQuestion);
+        res.status(201).json({ message: "Question created successfully!", data: newQuestion });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
+// ✅ Get All Questions with Quiz Type (Using Aggregation)
 exports.getQuestions = async (req, res) => {
     try {
-        const questions = await Question.find().populate("quiztype_id", "quiztype_name");
+        const questions = await Question.aggregate([
+            {
+                $lookup: {
+                    from: "quiztypes",
+                    localField: "quiztype_id",
+                    foreignField: "_id",
+                    as: "quiztype"
+                }
+            },
+            { $unwind: "$quiztype" },
+            {
+                $project: {
+                    question_text: 1,
+                    quiztype_name: "$quiztype.quiztype_name",
+                    options: 1
+                }
+            }
+        ]);
+
         res.status(200).json(questions);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
-exports.getQuestionById = async (req, res) => {
+// ✅ Get Questions by Quiz Type (Hiding correct_answer)
+exports.getQuestionsByQuizType = async (req, res) => {
     try {
-        const question = await Question.findById(req.params.id).populate("quiztype_id", "quiztype_name");
-        if (!question) {
-            return res.status(404).json({ message: "Question not found" });
+        const { quiztype_name } = req.params;
+
+        const questions = await Question.aggregate([
+            {
+                $lookup: {
+                    from: "quiztypes",
+                    localField: "quiztype_id",
+                    foreignField: "_id",
+                    as: "quiztype"
+                }
+            },
+            { $unwind: "$quiztype" },
+            { $match: { "quiztype.quiztype_name": quiztype_name } },
+            {
+                $project: {
+                    question_text: 1,
+                    quiztype_name: "$quiztype.quiztype_name",
+                    options: 1
+                }
+            }
+        ]);
+
+        if (!questions.length) {
+            return res.status(404).json({ message: "No questions found for this quiz type" });
         }
-        res.status(200).json(question);
+
+        res.status(200).json(questions);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
+// ✅ Update Question
 exports.updateQuestion = async (req, res) => {
     try {
-        const updatedQuestion = await Question.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!updatedQuestion) {
-            return res.status(404).json({ message: "Question not found" });
+        const { id } = req.params;
+        const { question_text, options, correct_answer } = req.body;
+
+        const question = await Question.findById(id);
+        if (!question) {
+            return res.status(404).json({ message: "Question not found!" });
         }
-        res.status(200).json(updatedQuestion);
+
+        if (options && !options.includes(correct_answer)) {
+            return res.status(400).json({ message: "Correct answer must be one of the provided options." });
+        }
+
+        const updatedQuestion = await Question.findByIdAndUpdate(id, req.body, { new: true });
+
+        res.status(200).json({ message: "Question updated successfully!", data: updatedQuestion });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
+// ✅ Delete Question
 exports.deleteQuestion = async (req, res) => {
     try {
-        const deletedQuestion = await Question.findByIdAndDelete(req.params.id);
-        if (!deletedQuestion) {
-            return res.status(404).json({ message: "Question not found" });
+        const { id } = req.params;
+
+        const question = await Question.findById(id);
+        if (!question) {
+            return res.status(404).json({ message: "Question not found!" });
         }
-        res.status(200).json({ message: "Question deleted successfully" });
+
+        await Question.findByIdAndDelete(id);
+
+        res.status(200).json({ message: "Question deleted successfully!" });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

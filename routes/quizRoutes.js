@@ -15,10 +15,13 @@
 const express = require("express");
 const { getQuestionsByQuizType } = require("../controllers/quizControllers");
 const authMiddleware = require("../middleware/authMiddleware");
+const verifyToken = require("../middleware/authMiddleware");
+const checkPermission = require("../middleware/roleMiddleware");
 
 const router = express.Router();
 
 // Get questions for a specific quiz type
-router.get("/quizzes/:quiztype_name/questions", authMiddleware, getQuestionsByQuizType);
+router.get("/quizzes/:quiztype_name", authMiddleware, getQuestionsByQuizType);
+// router.post('/attempt', verifyToken, checkPermission('perform_quiz'), quizController.attemptQuiz);
 
 module.exports = router;

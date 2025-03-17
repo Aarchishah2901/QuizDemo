@@ -1,146 +1,102 @@
-const Role = require("../models/roleModel");
+const Role = require('../models/roleModel');
+const User = require('../models/User');
 
-// exports.createRole = async (req, res) => {
-//     try
-//     {
-//         const { role_type } = req.body();
-//         if (!role_type) {
-//             return res.status(400).json({ message: "Role type is required" });
-//         }
-
-//         const existingRole = await Role.findOne({ role_type });
-//         if (existingRole) {
-//             return res.status(400).json({ message: "Role already exists" });
-//         }
-
-//         const newRole = new Role({ role_type });
-//         await newRole.save();
-
-//         res.status(201).json({ message: "Role created successfully", role: newRole });
-//     } catch (error) {
-//         res.status(500).json({ error: error.message });
-//     }
-// };
-
-// exports.getRoles = async (req, res) => {
-//     try
-//     {
-//         const roles = await Role.find();
-//         res.status(200).json(roles);
-//     }
-//     catch (error)
-//     {
-//         res.status(500).json({ error: error.message });
-//     }
-// };
-
-// exports.getRoleById = async (req, res) => {
-//     try
-//     {
-//         const role = await Role.findById(req.params.id);
-//         if (!role)
-//         {
-//             return res.status(404).json({ message: "Role not found" });
-//         }
-//         res.status(200).json(role);
-//     }
-//     catch (error)
-//     {
-//         res.status(500).json({ error: error.message });
-//     }
-// };
-
-// exports.updateRole = async (req, res) => {
-//     try
-//     {
-//         const { role_type } = req.body;
-//         if (!role_type)
-//         {
-//             return res.status(400).json({ message: "Role type is required" });
-//         }
-//         const updatedRole = await Role.findByIdAndUpdate(
-//             req.params.id,
-//             { role_type },
-//             { new: true, runValidators: true }
-//         );
-//         if( !updatedRole)
-//         {
-//             return res.status(404).json({ message: "Role not found" });
-//         }
-//         res.status(200).json({ message: "Role updated successfully", role: updatedRole });
-//     }
-//     catch (error)
-//     {
-//         res.status(500).json({ error: error.message });
-//     }
-// };
-
-// exports.deleteRole = async (req, res) => {
-//     try
-//     {
-//         const deletedRole = await Role.findByIdAndDelete(req.params.id);
-//         if (!deletedRole)
-//         {
-//             return res.status(404).json({ message: "Role not found" });
-//         }
-//         res.status(200).json({ message: "Role deleted successfully" });
-//     }
-//     catch (error)
-//     {
-//         res.status(500).json({ error: error.message });
-//     }
-// }
-
+// Create Role
 exports.createRole = async (req, res) => {
     try {
-        const { name, permissions } = req.body;
+        const { role_type, permissions } = req.body;
 
-        const newRole = new Role({ name, permissions });
+        const roleExists = await Role.findOne({ role_type });
+        if (roleExists) {
+            return res.status(400).json({ error: "Role already exists" });
+        }
+
+        const newRole = new Role({ role_type, permissions });
         await newRole.save();
-        res.status(201).json(newRole);
+        res.status(201).json({ message: "Role created successfully", role: newRole });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error("Error creating role:", error);
+        res.status(500).json({ error: "Internal server error" });
     }
 };
 
-exports.getAllRoles = async (req, res) => {
+exports.getRolesWithPermissions = async (req, res) => {
     try {
-        const roles = await Role.find();
+        const roles = await Role.aggregate([
+            {
+                $project: {
+                    _id: 1,
+                    name: 1,
+                    permissions: 1
+                }
+            }
+        ]);
         res.status(200).json(roles);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
-exports.getRoleById = async (req, res) => {
+// Get All Roles with Aggregation
+exports.getAllRoles = async (req, res) => {
     try {
-        const role = await Role.findById(req.params.roleID);
-        if (!role) return res.status(404).json({ message: "Role not found" });
+        const roles = await Role.aggregate([
+            {
+                $lookup: {
+                    from: "users", // Reference users collection
+                    localField: "_id",
+                    foreignField: "role_id",
+                    as: "users_with_role"
+                }
+            },
+            {
+                $project: {
+                    role_type: 1,
+                    permissions: 1,
+                    user_count: { $size: "$users_with_role" } // Count users in each role
+                }
+            }
+        ]);
 
-        res.status(200).json(role);
+        res.status(200).json(roles);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error("Error fetching roles:", error);
+        res.status(500).json({ error: "Internal server error" });
     }
 };
 
-exports.updateRole = async (req, res) => {
+// Assign Role to User
+exports.assignRole = async (req, res) => {
     try {
-        const updatedRole = await Role.findByIdAndUpdate(req.params.roleID, req.body, { new: true });
-        if (!updatedRole) return res.status(404).json({ message: "Role not found" });
+        const { userId, roleId } = req.body;
 
-        res.status(200).json(updatedRole);
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ error: "User not found" });
+
+        const role = await Role.findById(roleId);
+        if (!role) return res.status(404).json({ error: "Role not found" });
+
+        user.role_id = roleId;
+        await user.save();
+
+        res.status(200).json({ message: "Role assigned successfully", user });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error("Error assigning role:", error);
+        res.status(500).json({ error: "Internal server error" });
     }
 };
 
+// Delete Role
 exports.deleteRole = async (req, res) => {
     try {
-        const role = await Role.findByIdAndDelete(req.params.roleID);
-        if (!role) return res.status(404).json({ message: "Role not found" });
+        const { roleId } = req.params;
+
+        const role = await Role.findByIdAndDelete(roleId);
+        if (!role) return res.status(404).json({ error: "Role not found" });
 
         res.status(200).json({ message: "Role deleted successfully" });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error("Error deleting role:", error);
+        res.status(500).json({ error: "Internal server error" });
     }
 };
