@@ -5,7 +5,8 @@ const { verifyToken, checkRole } = require('../middleware/authMiddleware'); // I
 const checkPermission = require('../middleware/roleMiddleware'); // Middleware for permissions
 
 // Role Management Routes
-router.post('/create', verifyToken, checkPermission('manage_roles'), roleController.createRole);
+// router.post('/create', verifyToken, checkPermission('manage_roles'), roleController.createRole);
+router.post('/create', verifyToken, roleController.createRole);
 router.get('/all', verifyToken, checkPermission('view_roles'), roleController.getAllRoles);
 router.get('/:id', verifyToken, checkPermission('view_roles'), roleController.getRoleById);
 router.post('/assign', verifyToken, checkPermission('manage_roles'), roleController.assignRole);

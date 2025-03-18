@@ -43,7 +43,7 @@ const seedDatabase = async () => {
                 user_id: users[0]._id,
                 firstname: "John",
                 lastname: "Doe",
-                phone_no: 1234567890,
+                phone_number: 1234567890,
                 email: "john.doe@example.com",
                 gender: "Male",
                 password: "hashed_password",

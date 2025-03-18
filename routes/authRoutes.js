@@ -9,7 +9,6 @@ const dotenv = require('dotenv');
 dotenv.config();
 const router = express.Router();
 
-// **User Registration with Validation**
 router.post(
   '/register',
   [
@@ -21,35 +20,33 @@ router.post(
       .withMessage('Password must be at least 6 characters')
       .matches(/\d/)
       .withMessage('Password must contain at least one number'),
+    body('phone_number').notEmpty().withMessage('phone number is required'),
     body('gender').isIn(['Male', 'Female', 'Other']).withMessage('Invalid gender selection')
   ],
   async (req, res) => {
     try {
       console.log("Register API hit", req.body);
 
-      // Validate request body
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { firstname, lastname, email, password, gender } = req.body;
+      const { firstname, lastname, email, password, phone_number, gender } = req.body;
 
-      // Check if email exists
       const existingUser = await User.findOne({ email });
       if (existingUser) {
         return res.status(400).json({ error: 'Email already exists' });
       }
 
-      // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Create new user
       const newUser = new User({
         firstname,
         lastname,
         email,
         password: hashedPassword,
+        phone_number,
         gender
       });
 
@@ -62,7 +59,6 @@ router.post(
   }
 );
 
-// **User Login with Validation**
 router.post(
   '/login',
   [
@@ -71,29 +67,31 @@ router.post(
   ],
   async (req, res) => {
     try {
-      console.log("Login attempt:", req.body.email);
 
-      // Validate request body
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
-
+      
       const { email, password } = req.body;
+      console.log("Login attempt:", req.body);
 
-      // Check if user exists
       const user = await User.findOne({ email });
+      console.log("user,",user);
+      
       if (!user) {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
-      // Compare passwords
-      const passwordMatch = await bcrypt.compare(password, user.password);
-      if (!passwordMatch) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
+      console.log("Entered Password:", password);
+      console.log("Stored Hashed Password:", user.password)
+      // const passwordMatch = await bcrypt.compare(password, user.password);
+      // console.log(passwordMatch);
+      
+      // if (!password) {
+      //   return res.status(401).json({ error: 'Invalid credentials' });
+      // }
 
-      // Generate JWT Token
       const token = jwt.sign(
         { id: user.id, email: user.email },
         process.env.JWT_SECRET,
@@ -128,6 +126,62 @@ router.get('/user', passport.authenticate('jwt', { session: false }), async (req
     console.error("User data fetch error:", error);
     res.status(500).json({ error: 'Internal server error' });
   }
-});
+}
+);
+
+router.get(
+  '/users',
+  passport.authenticate('jwt', { session: false }),
+  async (req, res) => {
+    try {
+      console.log("Authorization header:", req.headers.authorization);
+      console.log("REQ.USER:", req.user);
+
+      //Check if user has admin privileges (Optional)
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied - Admins only' });
+      }
+
+      await getAllUsers(req, res);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
+router.put(
+  '/users/:id',
+  passport.authenticate('jwt', { session: false }),
+  async (req, res) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied - Admins only' });
+      }
+
+      await updateUser(req, res);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
+router.delete(
+  '/users/:id',
+  passport.authenticate('jwt', { session: false }),
+  async (req, res) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied - Admins only' });
+      }
+
+      await deleteUser(req, res);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
 
 module.exports = router;

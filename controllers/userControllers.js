@@ -50,7 +50,7 @@ exports.getUsersWithRoles = async (req, res) => {
                     firstname: 1,
                     lastname: 1,
                     email: 1,
-                    phone_no: 1,
+                    phone_number: 1,
                     gender: 1,
                     role: "$roleDetails.name",
                     permissions: "$roleDetails.permissions"

@@ -5,23 +5,35 @@ require('dotenv').config();
 
 const authMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization;
-    console.log("Authorization Header:", authHeader); // Debugging line
+    console.log("Authorization Header:", authHeader);
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!authHeader || !authHeader.startsWith("Bearer "))
+    {
         return res.status(401).json({ message: "Unauthorized: No token provided" });
     }
 
+    if (!token)
+    {
+        return res.status(401).json({ error: 'Access denied, token missing' });
+    }
+
     const token = authHeader.split(" ")[1];
-    console.log("Extracted Token:", token); // Debugging line
+    console.log("Extracted Token:", token);
 
-    try {
+    try
+    {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log("Decoded User:", decoded); // Debugging line
+        console.log("Decoded User:", decoded);
 
-        req.user = decoded; // Attach full user info to request
+        req.user = decoded;
+
+        const verified = jwt.verify(token.replace('Bearer', ''), process.env.JWT_SECRET);
+        req.user = verified;
         next();
-    } catch (error) {
-        console.error("Token Verification Error:", error); // Debugging line
+    }
+    catch (error)
+    {
+        console.error("Token Verification Error:", error);
         return res.status(401).json({ message: "Unauthorized: Invalid token" });
     }
 };
