@@ -64,8 +64,8 @@ exports.login = async (req, res) => {
 
       if (userAggregation.length === 0)
       {
-          console.log("User not found in database");
-          return res.status(401).json({ error: 'Invalid credentials' });
+        console.log("User not found in database");
+        return res.status(401).json({ error: 'Invalid credentials' });
       }
 
       const user = userAggregation[0];
@@ -106,6 +106,7 @@ exports.login = async (req, res) => {
 };
 
 exports.getUser = async (req, res) => {
+  
   try {
     const userId = req.user.id;
 
@@ -154,97 +155,97 @@ exports.getUser = async (req, res) => {
   }
 };
 
-exports.getAllUsers = async (req, res) => {
-  try {
-    const users = await User.aggregate([
-      {
-        $lookup:
-        {
-          from: "roles",
-          localField: "role_id",
-          foreignField: "_id",
-          as: "roleDetails",
-        },
-      },
-      { $unwind: "$roleDetails" },
-      {
-        $project:
-        {
-          _id: 1,
-          firstname: 1,
-          lastname: 1,
-          email: 1,
-          gender: 1,
-          phone_number: 1,
-          role: "$roleDetails.role_type",
-        },
-      }
-    ]);
+// exports.getAllUsers = async (req, res) => {
+//   try {
+//     const users = await User.aggregate([
+//       {
+//         $lookup:
+//         {
+//           from: "roles",
+//           localField: "role_id",
+//           foreignField: "_id",
+//           as: "roleDetails",
+//         },
+//       },
+//       { $unwind: "$roleDetails" },
+//       {
+//         $project:
+//         {
+//           _id: 1,
+//           firstname: 1,
+//           lastname: 1,
+//           email: 1,
+//           gender: 1,
+//           phone_number: 1,
+//           role: "$roleDetails.role_type",
+//         },
+//       }
+//     ]);
 
-    res.status(200).json(users);
-  }
-  catch (error)
-  {
-    console.error("Error fetching users:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
+//     res.status(200).json(users);
+//   }
+//   catch (error)
+//   {
+//     console.error("Error fetching users:", error);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// };
 
-exports.updateUser = async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty())
-    {
-      return res.status(400).json({ errors: errors.array() });
-    }
+// exports.updateUser = async (req, res) => {
+//   try {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty())
+//     {
+//       return res.status(400).json({ errors: errors.array() });
+//     }
 
-    const userId = req.user.id;
+//     const userId = req.user.id;
 
-    if (!mongoose.Types.ObjectId.isValid(userId))
-    {
-      return res.status(400).json({ error: 'Invalid user ID format' });
-    }
+//     if (!mongoose.Types.ObjectId.isValid(userId))
+//     {
+//       return res.status(400).json({ error: 'Invalid user ID format' });
+//     }
 
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $set: req.body },
-      { new: true, runValidators: true }
-    );
+//     const updatedUser = await User.findByIdAndUpdate(
+//       userId,
+//       { $set: req.body },
+//       { new: true, runValidators: true }
+//     );
 
-    if (!updatedUser)
-    {
-      return res.status(404).json({ error: 'User not found' });
-    }
+//     if (!updatedUser)
+//     {
+//       return res.status(404).json({ error: 'User not found' });
+//     }
 
-    res.status(200).json({ message: 'User updated successfully', user: updatedUser });
-  }
-  catch (error)
-  {
-    console.error("Update error:", error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
+//     res.status(200).json({ message: 'User updated successfully', user: updatedUser });
+//   }
+//   catch (error)
+//   {
+//     console.error("Update error:", error);
+//     res.status(500).json({ error: 'Internal server error' });
+//   }
+// };
 
-exports.deleteUser = async (req, res) => {
-  try {
-    const userId = req.user.id;
+// exports.deleteUser = async (req, res) => {
+//   try {
+//     const userId = req.user.id;
 
-    if (!mongoose.Types.ObjectId.isValid(userId))
-    {
-      return res.status(400).json({ error: 'Invalid user ID format' });
-    }
+//     if (!mongoose.Types.ObjectId.isValid(userId))
+//     {
+//       return res.status(400).json({ error: 'Invalid user ID format' });
+//     }
 
-    const user = await User.findByIdAndDelete(userId);
-    if (!user)
-    {
-      return res.status(404).json({ error: 'User not found' });
-    }
+//     const user = await User.findByIdAndDelete(userId);
+//     if (!user)
+//     {
+//       return res.status(404).json({ error: 'User not found' });
+//     }
 
-    res.status(200).json({ message: 'User deleted successfully' });
-  }
-  catch (error)
-  {
-    console.error("Delete error:", error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
+//     res.status(200).json({ message: 'User deleted successfully' });
+//   }
+//   catch (error)
+//   {
+//     console.error("Delete error:", error);
+//     res.status(500).json({ error: 'Internal server error' });
+//   }
+// };

@@ -34,7 +34,7 @@ app.use("/api/quizzes", quizRoutes);
 app.use("/api/results", resultRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/quiz-types", quizTypeRoutes);
-app.use("api/user", userRoutes);
+app.use("/api/user", userRoutes);
 
 app.get("/", (req, res) => {
 res.send("API is running.....");

@@ -16,7 +16,7 @@ const express = require("express");
 const { getQuestionsByQuizType } = require("../controllers/quizControllers");
 const authMiddleware = require("../middleware/authMiddleware");
 const verifyToken = require("../middleware/authMiddleware");
-const checkPermission = require("../middleware/roleMiddleware");
+const checkPermission = require("../middleware/authMiddleware");
 
 const router = express.Router();
 

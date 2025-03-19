@@ -1,7 +1,6 @@
 const Role = require('../models/roleModel');
 const User = require('../models/User');
 
-// Create Role
 exports.createRole = async (req, res) => {
     try {
         const { role_type, permissions } = req.body;
@@ -37,13 +36,12 @@ exports.getRolesWithPermissions = async (req, res) => {
     }
 };
 
-// Get All Roles with Aggregation
 exports.getAllRoles = async (req, res) => {
     try {
         const roles = await Role.aggregate([
             {
                 $lookup: {
-                    from: "users", // Reference users collection
+                    from: "users",
                     localField: "_id",
                     foreignField: "role_id",
                     as: "users_with_role"
@@ -53,7 +51,7 @@ exports.getAllRoles = async (req, res) => {
                 $project: {
                     role_type: 1,
                     permissions: 1,
-                    user_count: { $size: "$users_with_role" } // Count users in each role
+                    user_count: { $size: "$users_with_role" }
                 }
             }
         ]);
@@ -65,7 +63,6 @@ exports.getAllRoles = async (req, res) => {
     }
 };
 
-// Assign Role to User
 exports.assignRole = async (req, res) => {
     try {
         const { userId, roleId } = req.body;
@@ -86,7 +83,6 @@ exports.assignRole = async (req, res) => {
     }
 };
 
-// Delete Role
 exports.deleteRole = async (req, res) => {
     try {
         const { roleId } = req.params;

@@ -106,82 +106,81 @@ router.post(
   }
 );
 
-// **Get User Details (Protected)**
-router.get('/user', passport.authenticate('jwt', { session: false }), async (req, res) => {
-  console.log("Authorization header:", req.headers.authorization);
-  console.log("REQ.USER", req.user);
+// router.get(
+//   '/user', passport.authenticate('jwt', { session: false }), async (req, res) => {
+//   console.log("Authorization header:", req.headers.authorization);
+//   console.log("REQ.USER", req.user);
 
-  if (!req.user) {
-    return res.status(401).json({ error: 'Unauthorized - Invalid Token' });
-  }
+//   if (!req.user) {
+//     return res.status(401).json({ error: 'Unauthorized - Invalid Token' });
+//   }
 
-  try {
-    res.status(200).json({
-      firstname: req.user.firstname,
-      lastname: req.user.lastname,
-      email: req.user.email,
-      gender: req.user.gender
-    });
-  } catch (error) {
-    console.error("User data fetch error:", error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-}
-);
+//   try {
+//     res.status(200).json({
+//       firstname: req.user.firstname,
+//       lastname: req.user.lastname,
+//       email: req.user.email,
+//       gender: req.user.gender
+//     });
+//   } catch (error) {
+//     console.error("User data fetch error:", error);
+//     res.status(500).json({ error: 'Internal server error' });
+//   }
+// }
+// );
 
-router.get(
-  '/users',
-  passport.authenticate('jwt', { session: false }),
-  async (req, res) => {
-    try {
-      console.log("Authorization header:", req.headers.authorization);
-      console.log("REQ.USER:", req.user);
+// router.get(
+//   '/users',
+//   passport.authenticate('jwt', { session: false }),
+//   async (req, res) => {
+//     try {
+//       console.log("Authorization header:", req.headers.authorization);
+//       console.log("REQ.USER:", req.user);
 
-      //Check if user has admin privileges (Optional)
-      if (req.user.role !== 'admin') {
-        return res.status(403).json({ error: 'Access denied - Admins only' });
-      }
+//       if (req.user.role !== 'admin') {
+//         return res.status(403).json({ error: 'Access denied - Admins only' });
+//       }
 
-      await getAllUsers(req, res);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  }
-);
+//       await getAllUsers(req, res);
+//     } catch (error) {
+//       console.error("Error fetching users:", error);
+//       res.status(500).json({ error: 'Internal server error' });
+//     }
+//   }
+// );
 
-router.put(
-  '/users/:id',
-  passport.authenticate('jwt', { session: false }),
-  async (req, res) => {
-    try {
-      if (req.user.role !== 'admin') {
-        return res.status(403).json({ error: 'Access denied - Admins only' });
-      }
+// router.put(
+//   '/users/:id',
+//   passport.authenticate('jwt', { session: false }),
+//   async (req, res) => {
+//     try {
+//       if (req.user.role !== 'admin') {
+//         return res.status(403).json({ error: 'Access denied - Admins only' });
+//       }
 
-      await updateUser(req, res);
-    } catch (error) {
-      console.error("Error updating user:", error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  }
-);
+//       await updateUser(req, res);
+//     } catch (error) {
+//       console.error("Error updating user:", error);
+//       res.status(500).json({ error: 'Internal server error' });
+//     }
+//   }
+// );
 
-router.delete(
-  '/users/:id',
-  passport.authenticate('jwt', { session: false }),
-  async (req, res) => {
-    try {
-      if (req.user.role !== 'admin') {
-        return res.status(403).json({ error: 'Access denied - Admins only' });
-      }
+// router.delete(
+//   '/users/:id',
+//   passport.authenticate('jwt', { session: false }),
+//   async (req, res) => {
+//     try {
+//       if (req.user.role !== 'admin') {
+//         return res.status(403).json({ error: 'Access denied - Admins only' });
+//       }
 
-      await deleteUser(req, res);
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  }
-);
+//       await deleteUser(req, res);
+//     } catch (error) {
+//       console.error("Error deleting user:", error);
+//       res.status(500).json({ error: 'Internal server error' });
+//     }
+//   }
+// );
 
 module.exports = router;

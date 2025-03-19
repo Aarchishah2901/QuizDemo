@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Role = require('../models/roleModel');
+const mongoose = require("mongoose");
 require('dotenv').config();
 
 const authMiddleware = (req, res, next) => {
@@ -71,27 +72,84 @@ const verifyToken = async (req, res, next) =>{
     }
 };
 
-const checkRole = (allowedRoles) => {
-    return async (req, res, next) => {
-        try
-        {
-            const user = await User.findById(req.user.id).populate("role_id");
-            if (!user)
-                return res.status(404).json({ error: "User not found" });
+// const checkRole = (allowedRoles) => {
+//     return async (req, res, next) => {
+//         try
+//         {
+//             const user = await User.findById(req.user.id).populate("role_id");
+//             if (!user)
+//                 return res.status(404).json({ error: "User not found" });
 
-            if (!allowedRoles.includes(user.role_id.role_type))
+//             if (!allowedRoles.includes(user.role_id))
+//             {
+//                 return res.status(403).json({ error: "Access denied" });
+//             }
+
+//             next();
+//         }
+//         catch (error)
+//         {
+//             console.log("Authorization error:", error);
+//             return res.status(500).json({ error: "Internal server error" });
+//         }
+//     };
+// };
+
+const checkPermission = (requiredPermission) => async (req, res, next) => {
+    try
+    {
+        if (!req.user || !req.user.id)
+        {
+            console.log(user);
+            return res.status(401).json({ error: "Unauthorized: No user found in request" });
+        }
+
+        const user = await User.aggregate([
+            { $match: { _id: new mongoose.Types.ObjectId(req.user.id) } },
             {
-                return res.status(403).json({ error: "Access denied" });
+                $lookup:
+                {
+                    from: "roles",
+                    localField: "role_id",
+                    foreignField: "_id",
+                    as: "roleDetails"
+                }
+            },
+            { $unwind: "$roleDetails" },
+            {
+                $project:
+                {
+                    _id: 1,
+                    firstname: 1,
+                    lastname: 1,
+                    email: 1,
+                    role: "$roleDetails.role_type",
+                    permissions: "$roleDetails.permissions"
+                }
             }
+        ]);
 
-            next();
-        }
-        catch (error)
+        if (!user.length)
         {
-            console.log("Authorization error:", error);
-            return res.status(500).json({ error: "Internal server error" });
+            console.log(user);
+            return res.status(403).json({ error: "User not found or has no role assigned" });
         }
-    };
+
+        const userData = user[0];
+
+        if (!userData.permissions.includes(requiredPermission))
+        {
+            return res.status(403).json({ error: "Access denied: Insufficient permissions" });
+        }
+
+        req.user = userData;
+        next();
+    }
+    catch (error)
+    {
+        console.error("Permission Check Error:", error);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
 };
 
-module.exports = { verifyToken, checkRole, authMiddleware };
+module.exports = { verifyToken, authMiddleware, checkPermission };
