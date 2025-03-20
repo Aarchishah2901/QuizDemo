@@ -3,7 +3,6 @@ const router = express.Router();
 const roleController = require("../controllers/roleControllers");
 const { verifyToken, checkRole } = require("../middleware/authMiddleware");
 
-// CRUD Operations for Roles (Only Admin can manage roles)
 router.post("/", verifyToken, checkRole(["admin"]), roleController.createRole);
 router.get("/", verifyToken, checkRole(["admin"]), roleController.getAllRoles);
 router.get("/:id", verifyToken, checkRole(["admin"]), roleController.getRoleById);

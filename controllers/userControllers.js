@@ -2,15 +2,13 @@ const User = require('../models/User');
 const Role = require('../models/roleModel');
 const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
-// const jwt = require('jsonwebtoken');
-// const { validationResult } = require("express-validator");
 const mongoose = require('mongoose');
 
 exports.registerUser = async (req, res) => {
-    try {
+    try
+    {
         const { firstname, lastname, email, password, gender, phone_number, role } = req.body;
 
-        // Determine if the user is an admin based on the role field
         const isAdmin = role === "admin";
 
         const newUser = new User({
@@ -25,7 +23,9 @@ exports.registerUser = async (req, res) => {
 
         await newUser.save();
         res.status(201).json({ message: "User registered successfully", user: newUser });
-    } catch (error) {
+    }
+    catch (error)
+    {
         console.error("Error registering user:", error);
         res.status(500).json({ error: "Internal server error" });
     }
@@ -33,18 +33,21 @@ exports.registerUser = async (req, res) => {
 
 //Get All Users (Admin Only)
 exports.getAllUsers = async (req, res) => {
-    try {
+    try
+    {
         const users = await User.aggregate([
             {
-                $match: {} // Ensures the aggregation starts correctly
+                $match: {}
             },
             {
-                $lookup: {
+                $lookup:
+                {
                     from: "roles",
                     let: { roleId: "$role_id" },
                     pipeline: [
                         { 
-                            $match: { 
+                            $match:
+                            { 
                                 $expr: { $eq: ["$_id", { $toObjectId: "$$roleId" }] } 
                             } 
                         }
@@ -53,30 +56,35 @@ exports.getAllUsers = async (req, res) => {
                 }
             },
             {
-                $unwind: {
+                $unwind:
+                {
                     path: "$role",
-                    preserveNullAndEmptyArrays: true  // Allows users with no role
+                    preserveNullAndEmptyArrays: true
                 }
             },
             {
-                $project: {
+                $project:
+                {
                     _id: 1,
                     firstname: 1,
                     lastname: 1,
                     email: 1,
                     phone_number: 1,
                     gender: 1,
-                    role: { $ifNull: ["$role.name", "No Role Assigned"] } // Handles missing roles
+                    role: { $ifNull: ["$role.name", "No Role Assigned"] }
                 }
             }
         ]);
 
-        if (users.length === 0) {
+        if (users.length === 0)
+        {
             return res.status(404).json({ error: "No users found" });
         }
 
         res.status(200).json(users);
-    } catch (error) {
+    }
+    catch (error)
+    {
         console.error("Error fetching users:", error);
         res.status(500).json({ error: "Internal server error" });
     }
@@ -84,7 +92,8 @@ exports.getAllUsers = async (req, res) => {
 
 //Get User by ID
 exports.getUserById = async (req, res) => {
-    try {
+    try
+    {
         const userId = new mongoose.Types.ObjectId(req.params.id);
 
         const user = await User.aggregate([
@@ -92,12 +101,14 @@ exports.getUserById = async (req, res) => {
                 $match: { _id: userId } 
             },
             {
-                $lookup: {
+                $lookup:
+                {
                     from: "roles",
                     let: { roleId: "$role_id" },
                     pipeline: [
                         { 
-                            $match: { 
+                            $match:
+                            { 
                                 $expr: { $eq: ["$_id", { $toObjectId: "$$roleId" }] } 
                             } 
                         }
@@ -106,30 +117,35 @@ exports.getUserById = async (req, res) => {
                 }
             },
             {
-                $unwind: {
+                $unwind:
+                {
                     path: "$role",
-                    preserveNullAndEmptyArrays: true  // Allows users without roles
+                    preserveNullAndEmptyArrays: true
                 }
             },
             {
-                $project: {
+                $project:
+                {
                     _id: 1,
                     firstname: 1,
                     lastname: 1,
                     email: 1,
                     phone_number: 1,
                     gender: 1,
-                    role: { $ifNull: ["$role.name", "No Role Assigned"] } // Handles missing roles
+                    role: { $ifNull: ["$role.name", "No Role Assigned"] }
                 }
             }
         ]);
 
-        if (!user.length) {
+        if (!user.length)
+        {
             return res.status(404).json({ error: "User not found" });
         }
 
         res.status(200).json(user[0]);
-    } catch (error) {
+    }
+    catch (error)
+    {
         console.error("Error fetching user:", error);
         res.status(500).json({ error: "Internal server error" });
     }
@@ -137,20 +153,24 @@ exports.getUserById = async (req, res) => {
 
 //Update User
 exports.updateUser = async (req, res) => {
-    try {
+    try
+    {
         const { firstname, lastname, phone_number, email, gender } = req.body;
         const userId = req.params.id;
 
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
+        if (!mongoose.Types.ObjectId.isValid(userId))
+        {
             return res.status(400).json({ error: "Invalid user ID format" });
         }
 
         let user = await User.findById(userId);
-        if (!user) {
+        if (!user)
+        {
             return res.status(404).json({ error: "User not found" });
         }
 
-        const updatedData = {
+        const updatedData =
+        {
             firstname: firstname || user.firstname,
             lastname: lastname || user.lastname,
             phone_number: phone_number || user.phone_number,
@@ -161,7 +181,9 @@ exports.updateUser = async (req, res) => {
         user = await User.findByIdAndUpdate(userId, updatedData, { new: true });
 
         res.status(200).json({ message: "User updated successfully", user });
-    } catch (error) {
+    }
+    catch (error)
+    {
         console.error("Error updating user:", error);
         res.status(500).json({ error: "Internal server error" });
     }
@@ -169,13 +191,17 @@ exports.updateUser = async (req, res) => {
 
 //Delete User (Admin Only)
 exports.deleteUser = async (req, res) => {
-    try {
+    try
+    {
         const user = await User.findByIdAndDelete(req.params.id);
-        if (!user) {
+        if (!user)
+        {
             return res.status(404).json({ error: "User not found" });
         }
         res.status(200).json({ message: "User deleted successfully" });
-    } catch (error) {
+    }
+    catch (error)
+    {
         console.error("Error deleting user:", error);
         res.status(500).json({ error: "Internal server error" });
     }
