@@ -9,55 +9,55 @@ const dotenv = require('dotenv');
 dotenv.config();
 const router = express.Router();
 
-router.post(
-  '/register',
-  [
-    body('firstname').notEmpty().withMessage('First name is required'),
-    body('lastname').notEmpty().withMessage('Last name is required'),
-    body('email').isEmail().withMessage('Invalid email format'),
-    body('password')
-      .isLength({ min: 6 })
-      .withMessage('Password must be at least 6 characters')
-      .matches(/\d/)
-      .withMessage('Password must contain at least one number'),
-    body('phone_number').notEmpty().withMessage('phone number is required'),
-    body('gender').isIn(['Male', 'Female', 'Other']).withMessage('Invalid gender selection')
-  ],
-  async (req, res) => {
-    try {
-      console.log("Register API hit", req.body);
+// router.post(
+//   '/register',
+//   [
+//     body('firstname').notEmpty().withMessage('First name is required'),
+//     body('lastname').notEmpty().withMessage('Last name is required'),
+//     body('email').isEmail().withMessage('Invalid email format'),
+//     body('password')
+//       .isLength({ min: 6 })
+//       .withMessage('Password must be at least 6 characters')
+//       .matches(/\d/)
+//       .withMessage('Password must contain at least one number'),
+//     body('phone_number').notEmpty().withMessage('phone number is required'),
+//     body('gender').isIn(['Male', 'Female', 'Other']).withMessage('Invalid gender selection')
+//   ],
+//   async (req, res) => {
+//     try {
+//       console.log("Register API hit", req.body);
 
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
+//       const errors = validationResult(req);
+//       if (!errors.isEmpty()) {
+//         return res.status(400).json({ errors: errors.array() });
+//       }
 
-      const { firstname, lastname, email, password, phone_number, gender } = req.body;
+//       const { firstname, lastname, email, password, phone_number, gender } = req.body;
 
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({ error: 'Email already exists' });
-      }
+//       const existingUser = await User.findOne({ email });
+//       if (existingUser) {
+//         return res.status(400).json({ error: 'Email already exists' });
+//       }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+//       const hashedPassword = await bcrypt.hash(password, 10);
 
-      const newUser = new User({
-        firstname,
-        lastname,
-        email,
-        password: hashedPassword,
-        phone_number,
-        gender
-      });
+//       const newUser = new User({
+//         firstname,
+//         lastname,
+//         email,
+//         password: hashedPassword,
+//         phone_number,
+//         gender
+//       });
 
-      await newUser.save();
-      res.status(201).json({ message: 'User registered successfully' });
-    } catch (error) {
-      console.error("Registration error:", error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  }
-);
+//       await newUser.save();
+//       res.status(201).json({ message: 'User registered successfully' });
+//     } catch (error) {
+//       console.error("Registration error:", error);
+//       res.status(500).json({ error: 'Internal server error' });
+//     }
+//   }
+// );
 
 router.post(
   '/login',

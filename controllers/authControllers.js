@@ -7,37 +7,37 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-exports.register = async (req, res) => {
+// exports.register = async (req, res) => {
   
-  try
-  {
-    const errors = validationResult(req);
-    if (!errors.isEmpty())
-    {
-      return res.status(400).json({ errors: errors.array() });
-    }
+//   try
+//   {
+//     const errors = validationResult(req);
+//     if (!errors.isEmpty())
+//     {
+//       return res.status(400).json({ errors: errors.array() });
+//     }
 
-    const { firstname, lastname, phone_number, email, password, gender, role_id } = req.body;
+//     const { firstname, lastname, phone_number, email, password, gender, role_id } = req.body;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser)
-    {
-      return res.status(400).json({ error: 'Email already exists' });
-    }
+//     const existingUser = await User.findOne({ email });
+//     if (existingUser)
+//     {
+//       return res.status(400).json({ error: 'Email already exists' });
+//     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+//     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = new User({ firstname, lastname, phone_number, email, password: hashedPassword, gender, role_id });
-    await newUser.save();
+//     const newUser = new User({ firstname, lastname, phone_number, email, password: hashedPassword, gender, role_id });
+//     await newUser.save();
 
-    res.status(201).json({ user_id: newUser._id.toString() });
-  }
-  catch (error)
-  {
-    console.error("Registration error:", error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
+//     res.status(201).json({ user_id: newUser._id.toString() });
+//   }
+//   catch (error)
+//   {
+//     console.error("Registration error:", error);
+//     res.status(500).json({ error: 'Internal server error' });
+//   }
+// };
 
 exports.login = async (req, res) => {
 

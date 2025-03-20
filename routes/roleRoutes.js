@@ -1,18 +1,29 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const roleController = require('../controllers/roleControllers');
-const { verifyToken, checkRole } = require('../middleware/authMiddleware');
-const checkPermission = require('../middleware/authMiddleware');
+const roleController = require("../controllers/roleControllers");
+const { verifyToken, checkRole } = require("../middleware/authMiddleware");
 
-// router.post('/create', verifyToken, checkPermission('manage_roles'), roleController.createRole);
-router.post('/create', verifyToken, roleController.createRole);
-// router.get('/all', verifyToken, checkPermission('view_roles'), roleController.getAllRoles);
-router.get('/all', verifyToken, roleController.getAllRoles);
-// router.get('/:id', verifyToken, checkPermission('view_roles'), roleController.getRoleById);
-router.get('/:id', verifyToken, roleController.getRoleById);
-// router.post('/assign', verifyToken, checkPermission('manage_roles'), roleController.assignRole);
-router.post('/assign', verifyToken, roleController.assignRole);
-// router.delete('/delete/:roleId', verifyToken, checkPermission('manage_roles'), roleController.deleteRole);
-router.delete('/delete/:roleId', verifyToken, roleController.deleteRole);
+// CRUD Operations for Roles (Only Admin can manage roles)
+router.post("/", verifyToken, checkRole(["admin"]), roleController.createRole);
+router.get("/", verifyToken, checkRole(["admin"]), roleController.getAllRoles);
+router.get("/:id", verifyToken, checkRole(["admin"]), roleController.getRoleById);
+router.put("/:id", verifyToken, checkRole(["admin"]), roleController.updateRole);
+router.delete("/:id", verifyToken, checkRole(["admin"]), roleController.deleteRole);
+
+router.get("/admin/dashboard", verifyToken, checkRole(["admin"]), (req,res) => {
+    res.json({ message: "Welcome Admin!" });
+});
+
+router.get("/user/dashboard", verifyToken, checkRole(["user"]), (res,req) => {
+    res.json({ message: "Welcome User!" });
+});
+
+router.get("/moderator/dashboard", verifyToken, checkRole(["moderator"]), (req,res) => {
+    res.json({ message: "Welcome Moderator!" });
+});
+
+router.get("/admin-moderator", verifyToken, checkRole(["admin","moderator"]), (req,res) => {
+    res.json({ message: "Weclome Admin or Moderator" });
+});
 
 module.exports = router;
