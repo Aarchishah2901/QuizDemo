@@ -1,11 +1,8 @@
 const express = require("express");
-const { submitAnswer, getAnswerByQuestionId, checkAnswer } = require("../controllers/answerController");
-const authMiddleware = require("../middleware/authMiddleware");
-
 const router = express.Router();
+const answerController = require("../controllers/answerController");
 
-router.post("/answers", authMiddleware, submitAnswer);
-router.get("/answers/:questionID", authMiddleware, getAnswerByQuestionId);
-router.post("/answers/check", authMiddleware, checkAnswer);  // New route for checking answers
+router.post("/submit", answerController.submitAnswer);
+router.get("/:user_id/:quiz_id", answerController.getUserAnswers);
 
 module.exports = router;

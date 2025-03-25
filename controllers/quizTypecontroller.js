@@ -1,17 +1,13 @@
 const QuizType = require("../models/quizTypeModel");
 
 exports.createQuizType = async (req,res) => {
-    console.log("call fun");
-    
     try
     {
         const { quiztype_name } = req.body;
         const existingQuiztpe = await QuizType.findOne({ quiztype_name: req.body.quiztype_name });
-        if ( existingQuiztpe)
-            return res.status(400).json({ message: "Quiz type allready exists" });
+        if ( existingQuiztpe) return res.status(400).json({ message: "Quiz type allready exists" });
 
         const newQuizType = new QuizType({ quiztype_name });
-        console.log("New quiz", newQuizType)
         await newQuizType.save();
         res.status(201).json(newQuizType);
     }
@@ -37,8 +33,7 @@ exports.getQuizTypeById = async (req, res) => {
     try
     {
         const quizType = await QuizType.findById(req.params.id);
-        if (!quizType)
-            return res.status(404).json({ message: "Quiz type not found" });
+        if (!quizType) return res.status(404).json({ message: "Quiz type not found" });
         res.status(200).json(quizType);
     }
     catch (error)
@@ -51,8 +46,7 @@ exports.updateQuizType = async (req, res) => {
     try
     {
         const updatedQuizType = await QuizType.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!updatedQuizType)
-            return res.status(404).json({ message: "Quiz type not found" });
+        if (!updatedQuizType) return res.status(404).json({ message: "Quiz type not found" });
         res.status(200).json(updatedQuizType);
     }
     catch (error)

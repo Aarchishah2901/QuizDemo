@@ -21,8 +21,6 @@ mongoose.connect(MONGO_URI)
 
 const seedDatabase = async () => {
     try {
-        console.log("Deleting existing data...");
-
         await Role.deleteMany({});
         await User.deleteMany({});
         await QuizType.deleteMany({});
@@ -30,8 +28,6 @@ const seedDatabase = async () => {
         await Answer.deleteMany({});
         await Quiz.deleteMany({});
         await Result.deleteMany({});
-
-        console.log("Old data deleted successfully!");
 
         const roles = await Role.insertMany([
             { role_type: "Admin" },
@@ -106,7 +102,6 @@ const seedDatabase = async () => {
             }
         ]);
 
-        console.log("Database Seeded Successfully!");
     } catch (error) {
         console.error("Seeding Failed:", error);
     } finally {

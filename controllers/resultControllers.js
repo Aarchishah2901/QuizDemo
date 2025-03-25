@@ -1,69 +1,78 @@
-const Question = require("../models/questionModel");
+const mongoose = require("mongoose");
 const Result = require("../models/resultModel");
+const Answer = require("../models/answerModel");
 
-// ✅ Get Quiz Result after submission
-exports.getQuizResult = async (req, res) => {
+//Calculate and Store Result
+exports.calculateResult = async (req, res) => {
     try {
-        const { quiztype_name, user_answers } = req.body;
-        const user_id = req.user._id;
+        const { user_id, quiz_id } = req.body;
 
-        const questions = await Question.aggregate([
+        // Aggregate user answers
+        const resultData = await Answer.aggregate([
+            { $match: { user_id: new mongoose.Types.ObjectId(user_id), quiz_id: new mongoose.Types.ObjectId(quiz_id) } },
             {
                 $lookup: {
-                    from: "quiztypes",
-                    localField: "quiztype_id",
+                    from: "questions",
+                    localField: "question_id",
                     foreignField: "_id",
-                    as: "quiztype"
+                    as: "questionDetails"
                 }
             },
-            { $match: { "quiztype.quiztype_name": quiztype_name } },
-            { $project: { correct_answer: 1, question_text: 1 } } // Show correct_answer after quiz is completed
+            { $unwind: "$questionDetails" },
+            {
+                $project: {
+                    _id: 1,
+                    question_id: 1,
+                    selected_option: 1,
+                    correct_answer: "$questionDetails.correct_answer"
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    total_questions: { $sum: 1 },
+                    correct_answers: {
+                        $sum: {
+                            $cond: [{ $eq: ["$selected_option", "$correct_answer"] }, 1, 0]
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    total_questions: 1,
+                    correct_answers: 1,
+                    incorrect_answers: { $subtract: ["$total_questions", "$correct_answers"] },
+                    score_percentage: { $multiply: [{ $divide: ["$correct_answers", "$total_questions"] }, 100] }
+                }
+            }
         ]);
 
-        if (!questions.length) {
-            return res.status(404).json({ message: "No questions found for this quiz type" });
+        if (!resultData.length) {
+            return res.status(404).json({ message: "No answers found for this quiz" });
         }
 
-        let correctCount = 0;
-        let incorrectCount = 0;
-        let answersArray = [];
+        const { total_questions, correct_answers, incorrect_answers, score_percentage } = resultData[0];
 
-        questions.forEach((question) => {
-            const userAnswer = user_answers.find(ans => ans.question_id.toString() === question._id.toString());
-
-            const isCorrect = userAnswer?.selected_answer === question.correct_answer;
-            if (isCorrect) {
-                correctCount++;
-            } else {
-                incorrectCount++;
-            }
-
-            answersArray.push({
-                question_id: question._id,
-                question_text: question.question_text,
-                selected_answer: userAnswer?.selected_answer || "No Answer",
-                correct_answer: question.correct_answer,
-                isCorrect
-            });
-        });
-
-        // Save result in database
-        const newResult = new Result({
+        // Save result in the database
+        const result = new Result({
             user_id,
-            quiztype_name,
-            total_questions: questions.length,
-            correct_answers: correctCount,
-            incorrect_answers: incorrectCount,
-            answers: answersArray
+            quiz_id,
+            total_questions,
+            correct_answers,
+            incorrect_answers,
+            score_percentage
         });
 
-        await newResult.save();
+        await result.save();
 
-        res.status(200).json({ 
-            totalQuestions: questions.length, 
-            correctCount, 
-            incorrectCount, 
-            answers: answersArray 
+        res.status(200).json({
+            message: "Quiz result calculated successfully!",
+            total_questions,
+            correct_answers,
+            incorrect_answers,
+            score_percentage
         });
 
     } catch (error) {
@@ -71,19 +80,31 @@ exports.getQuizResult = async (req, res) => {
     }
 };
 
-exports.getUserResults = async (req, res) => {
+//Get User's Result
+exports.getResult = async (req, res) => {
     try {
-        const user_id = req.user._id; // Get user ID from auth middleware
+        const { user_id, quiz_id } = req.params;
 
-        const results = await Result.find({ user_id })
-            .populate("answers.question_id", "question_text") // Populate question text
-            .sort({ createdAt: -1 }); // Show latest results first
+        const result = await Result.aggregate([
+            { $match: { user_id: new mongoose.Types.ObjectId(user_id), quiz_id: new mongoose.Types.ObjectId(quiz_id) } },
+            {
+                $project: {
+                    _id: 1,
+                    total_questions: 1,
+                    correct_answers: 1,
+                    incorrect_answers: 1,
+                    score_percentage: 1,
+                    created_at: 1
+                }
+            }
+        ]);
 
-        if (!results.length) {
-            return res.status(404).json({ message: "No results found for this user" });
+        if (!result.length) {
+            return res.status(404).json({ message: "No results found" });
         }
 
-        res.status(200).json(results);
+        res.status(200).json(result[0]);
+
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

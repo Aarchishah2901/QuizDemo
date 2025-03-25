@@ -1,35 +1,6 @@
 const User = require('../models/User');
-const Role = require('../models/roleModel');
-const bcrypt = require('bcryptjs');
-const { validationResult } = require('express-validator');
 const mongoose = require('mongoose');
 
-exports.registerUser = async (req, res) => {
-    try
-    {
-        const { firstname, lastname, email, password, gender, phone_number, role } = req.body;
-
-        const isAdmin = role === "admin";
-
-        const newUser = new User({
-            firstname,
-            lastname,
-            email,
-            password,
-            gender,
-            phone_number,
-            isAdmin
-        });
-
-        await newUser.save();
-        res.status(201).json({ message: "User registered successfully", user: newUser });
-    }
-    catch (error)
-    {
-        console.error("Error registering user:", error);
-        res.status(500).json({ error: "Internal server error" });
-    }
-};
 
 //Get All Users (Admin Only)
 exports.getAllUsers = async (req, res) => {

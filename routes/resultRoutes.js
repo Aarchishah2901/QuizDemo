@@ -1,10 +1,8 @@
 const express = require("express");
-const { getQuizResult, getUserResults } = require("../controllers/resultControllers");
-const authMiddleware = require("../middleware/authMiddleware");
-
 const router = express.Router();
+const resultController = require("../controllers/resultControllers");
 
-router.post("/results", authMiddleware, getQuizResult);
-router.get("/results", authMiddleware, getUserResults);
+router.post("/calculate", resultController.calculateResult);
+router.get("/:user_id/:quiz_id", resultController.getResult);
 
 module.exports = router;

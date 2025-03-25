@@ -1,6 +1,7 @@
+const mongoose = require("mongoose");
 const Question = require("../models/questionModel");
 
-// ✅ Create Question
+//Create Question
 exports.createQuestion = async (req, res) => {
     try {
         const { question_text, quiztype_id, options, correct_answer } = req.body;
@@ -21,11 +22,11 @@ exports.createQuestion = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-
-// ✅ Get All Questions with Quiz Type (Using Aggregation)
+    
+//Get All Questions with Quiz Type (Using Aggregation)
 exports.getQuestions = async (req, res) => {
     try {
-        const questions = await Question.aggregate([
+            const questions = await Question.aggregate([
             {
                 $lookup: {
                     from: "quiztypes",
@@ -50,27 +51,40 @@ exports.getQuestions = async (req, res) => {
     }
 };
 
-// ✅ Get Questions by Quiz Type (Hiding correct_answer)
 exports.getQuestionsByQuizType = async (req, res) => {
     try {
-        const { quiztype_name } = req.params;
+        const { quiztype_id } = req.params;
 
+        console.log("Requested Quiz Type ID:", quiztype_id); // Debugging step
+
+        // Validate if quiztype_id is a valid ObjectId
+        if (!mongoose.Types.ObjectId.isValid(quiztype_id)) {
+            return res.status(400).json({ message: "Invalid quiz type ID" });
+        }
+
+        // Perform aggregation
         const questions = await Question.aggregate([
+            {
+                $match: { quiztype_id: new mongoose.Types.ObjectId(quiztype_id) }
+            },
             {
                 $lookup: {
                     from: "quiztypes",
-                    localField: "quiztype_id",
-                    foreignField: "_id",
+                    let: { quiztypeId: "$quiztype_id" },
+                    pipeline: [
+                        { $match: { $expr: { $eq: ["$_id", { $toObjectId: "$$quiztypeId" }] } } }
+                    ],
                     as: "quiztype"
                 }
             },
             { $unwind: "$quiztype" },
-            { $match: { "quiztype.quiztype_name": quiztype_name } },
             {
                 $project: {
+                    _id: 1, // Keep Question ID
                     question_text: 1,
                     quiztype_name: "$quiztype.quiztype_name",
                     options: 1
+                    // Excluding correct_answer by not mentioning it
                 }
             }
         ]);
@@ -81,11 +95,68 @@ exports.getQuestionsByQuizType = async (req, res) => {
 
         res.status(200).json(questions);
     } catch (error) {
+        console.error("Error:", error);
         res.status(500).json({ error: error.message });
     }
 };
 
-// ✅ Update Question
+//Get Questions by Quiz Type (Hiding correct_answer)
+exports.getQuestionById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        console.log("Requested Question ID:", id); // Debugging step
+
+        // Validate if the ID is a valid MongoDB ObjectId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid question ID" });
+        }
+
+        // Debugging: Check if the question exists
+        const questionExists = await Question.findById(id);
+        console.log("Question Exists:", questionExists);
+
+        if (!questionExists) {
+            return res.status(404).json({ message: "Question not found" });
+        }
+
+        // Perform aggregation
+        const question = await Question.aggregate([
+            {
+                $match: { _id: new mongoose.Types.ObjectId(id) }
+            },
+            {
+                $lookup: {
+                    from: "quiztypes",
+                    localField: "quiztype_id",
+                    foreignField: "_id",
+                    as: "quiztype"
+                }
+            },
+            { $unwind: "$quiztype" },
+            {
+                $project: {
+                    _id: 1, // Keep ID
+                    question_text: 1,
+                    quiztype_name: "$quiztype.quiztype_name",
+                    options: 1
+                    // Exclude correct_answer by not mentioning it
+                }
+            }
+        ]);
+
+        if (!question.length) {
+            return res.status(404).json({ message: "Question not found" });
+        }
+
+        res.status(200).json(question[0]); // Return as an object, not an array
+    } catch (error) {
+        console.error("Error:", error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+//Update Question
 exports.updateQuestion = async (req, res) => {
     try {
         const { id } = req.params;
@@ -108,7 +179,7 @@ exports.updateQuestion = async (req, res) => {
     }
 };
 
-// ✅ Delete Question
+//Delete Question
 exports.deleteQuestion = async (req, res) => {
     try {
         const { id } = req.params;

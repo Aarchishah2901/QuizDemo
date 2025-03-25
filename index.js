@@ -28,11 +28,11 @@ require("./config/passport");
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/roles", roleRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/answers", answerRoutes);
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/results", resultRoutes);
-app.use("/api/roles", roleRoutes);
 app.use("/api/quiz-types", quizTypeRoutes);
 app.use("/api/user", userRoutes);
 

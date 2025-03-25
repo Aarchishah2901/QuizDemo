@@ -1,61 +1,65 @@
+const mongoose = require("mongoose");
 const Answer = require("../models/answerModel");
 const Question = require("../models/questionModel");
 
+//Submit User Answer
 exports.submitAnswer = async (req, res) => {
     try {
-        const { question_id, answer_text, correct_answer } = req.body;
+        const { user_id, quiz_id, question_id, selected_option } = req.body;
 
-        if (!question_id || !answer_text || correct_answer === undefined) {
-            return res.status(400).json({ error: "Missing required fields" });
+        // Check if the question exists
+        const question = await Question.findById(question_id);
+        if (!question) {
+            return res.status(404).json({ message: "Question not found" });
         }
 
-        const newAnswer = new Answer({ question_id, answer_text, correct_answer });
-        await newAnswer.save();
-        res.status(201).json(newAnswer);
-    } catch (error) {
-        console.error("Submit Answer Error:", error);
-        res.status(500).json({ error: error.message });
-    }
-};
-
-exports.getAnswerByQuestionId = async (req, res) => {
-    try {
-        const answer = await Answer.findOne({ question_id: req.params.questionID });
-
-        if (!answer) {
-            return res.status(404).json({ message: "Answer not found" });
-        }
-
-        res.status(200).json(answer);
-    } catch (error) {
-        console.error("Get Answer Error:", error);
-        res.status(500).json({ error: error.message });
-    }
-};
-
-exports.checkAnswer = async (req, res) => {
-    try {
-        const { question_id, answer_text } = req.body;
-
-        if (!question_id || !answer_text) {
-            return res.status(400).json({ error: "Question ID and answer text are required" });
-        }
-
-        const correctAnswer = await Answer.findOne({ question_id, correct_answer: true });
-
-        if (!correctAnswer) {
-            return res.status(404).json({ error: "Correct answer not found for this question" });
-        }
-
-        const isCorrect = correctAnswer.answer_text === answer_text;
-
-        res.status(200).json({
-            message: isCorrect ? "Correct answer!" : "Wrong answer!",
-            correct_answer: correctAnswer.answer_text,
-            isCorrect
+        // Store answer
+        const answer = new Answer({
+            user_id,
+            quiz_id,
+            question_id,
+            selected_option
         });
+
+        await answer.save();
+        res.status(200).json({ message: "Answer submitted successfully!" });
+
     } catch (error) {
-        console.error("Check Answer Error:", error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+//Get User's Answers (with Aggregation)
+exports.getUserAnswers = async (req, res) => {
+    try {
+        const { user_id, quiz_id } = req.params;
+
+        const answers = await Answer.aggregate([
+            { $match: { user_id: new mongoose.Types.ObjectId(user_id), quiz_id: new mongoose.Types.ObjectId(quiz_id) } },
+            {
+                $lookup: {
+                    from: "questions",
+                    localField: "question_id",
+                    foreignField: "_id",
+                    as: "questionDetails"
+                }
+            },
+            { $unwind: "$questionDetails" },
+            {
+                $project: {
+                    _id: 1,
+                    "questionDetails.question_text": 1,
+                    selected_option: 1
+                }
+            }
+        ]);
+
+        if (!answers.length) {
+            return res.status(404).json({ message: "No answers found for this quiz" });
+        }
+
+        res.status(200).json(answers);
+    } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
