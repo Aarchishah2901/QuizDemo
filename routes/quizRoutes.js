@@ -19,6 +19,6 @@ const { verifyToken } = require("../middleware/authMiddleware");
 const router = express.Router();
 
 // Get questions for a specific quiz type
-router.get("/quizzes/:quiztype_name", verifyToken, getQuestionsByQuizType);
+router.get("/quizzes/:id", verifyToken, getQuestionsByQuizType);
 
 module.exports = router;
