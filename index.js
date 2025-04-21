@@ -16,6 +16,7 @@ const { Strategy: JwtStrategy, ExtractJwt } = require("passport-jwt");
 const cors = require("cors");
 
 const app = express();
+ 
 
 // Setup CORS
 app.use(cors({
