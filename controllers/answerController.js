@@ -34,8 +34,21 @@ exports.getUserAnswers = async (req, res) => {
     try {
         const { user_id, quiz_id } = req.params;
 
+        // Validate ObjectId
+        if (!mongoose.Types.ObjectId.isValid(user_id) || !mongoose.Types.ObjectId.isValid(quiz_id)) {
+            return res.status(400).json({ message: "Invalid user_id or quiz_id" });
+        }
+
+        console.log("User ID:", user_id);
+        console.log("Quiz ID:", quiz_id);
+
         const answers = await Answer.aggregate([
-            { $match: { user_id: new mongoose.Types.ObjectId(user_id), quiz_id: new mongoose.Types.ObjectId(quiz_id) } },
+            { 
+                $match: { 
+                    user_id: new mongoose.Types.ObjectId(user_id), 
+                    quiz_id: new mongoose.Types.ObjectId(quiz_id) 
+                } 
+            },
             {
                 $lookup: {
                     from: "questions",
@@ -60,6 +73,7 @@ exports.getUserAnswers = async (req, res) => {
 
         res.status(200).json(answers);
     } catch (error) {
+        console.error("Error fetching answers:", error);
         res.status(500).json({ error: error.message });
     }
 };

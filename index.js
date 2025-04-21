@@ -12,13 +12,20 @@ const quizTypeRoutes = require("./routes/quizTypeRoutes");
 const userRoutes = require("./routes/userRoutes");
 const path = require("path");
 const User = require("./models/User");
-const { Strategy: JwtStrategy, ExtractJwt } = require("passport-jwt"); // Import this
+const { Strategy: JwtStrategy, ExtractJwt } = require("passport-jwt");
+const cors = require("cors");
 
-// Load environment variables
-dotenv.config();
-
-// Initialize Express App
 const app = express();
+
+// Setup CORS
+app.use(cors({
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+  }));
+
+// Load env vars
+dotenv.config();
 connectDB();
 
 // Middleware
