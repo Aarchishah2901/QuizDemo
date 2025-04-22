@@ -9,9 +9,8 @@ dotenv.config();
 
 exports.login = async (req, res) => {
 
-  try
-  {
-
+    try
+    {
       const errors = validationResult(req);
       if (!errors.isEmpty())
       {

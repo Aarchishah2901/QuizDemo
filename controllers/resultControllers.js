@@ -1,111 +1,35 @@
-const mongoose = require("mongoose");
-const Result = require("../models/resultModel");
 const Answer = require("../models/answerModel");
+const Result = require("../models/resultModel");
 
-//Calculate and Store Result
 exports.calculateResult = async (req, res) => {
-    try {
-        const { user_id, quiz_id } = req.body;
+  try {
+    const { userId, quizId } = req.body;
+    const answers = await Answer.find({ userId, quizId });
 
-        // Aggregate user answers
-        const resultData = await Answer.aggregate([
-            { $match: { user_id: new mongoose.Types.ObjectId(user_id), quiz_id: new mongoose.Types.ObjectId(quiz_id) } },
-            {
-                $lookup: {
-                    from: "questions",
-                    localField: "question_id",
-                    foreignField: "_id",
-                    as: "questionDetails"
-                }
-            },
-            { $unwind: "$questionDetails" },
-            {
-                $project: {
-                    _id: 1,
-                    question_id: 1,
-                    selected_option: 1,
-                    correct_answer: "$questionDetails.correct_answer"
-                }
-            },
-            {
-                $group: {
-                    _id: null,
-                    total_questions: { $sum: 1 },
-                    correct_answers: {
-                        $sum: {
-                            $cond: [{ $eq: ["$selected_option", "$correct_answer"] }, 1, 0]
-                        }
-                    }
-                }
-            },
-            {
-                $project: {
-                    _id: 0,
-                    total_questions: 1,
-                    correct_answers: 1,
-                    incorrect_answers: { $subtract: ["$total_questions", "$correct_answers"] },
-                    score_percentage: { $multiply: [{ $divide: ["$correct_answers", "$total_questions"] }, 100] }
-                }
-            }
-        ]);
-
-        if (!resultData.length) {
-            return res.status(404).json({ message: "No answers found for this quiz" });
-        }
-
-        const { total_questions, correct_answers, incorrect_answers, score_percentage } = resultData[0];
-
-        // Save result in the database
-        const result = new Result({
-            user_id,
-            quiz_id,
-            total_questions,
-            correct_answers,
-            incorrect_answers,
-            score_percentage
-        });
-
-        await result.save();
-
-        res.status(200).json({
-            message: "Quiz result calculated successfully!",
-            total_questions,
-            correct_answers,
-            incorrect_answers,
-            score_percentage
-        });
-
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+    if (!answers.length) {
+      return res.status(404).json({ message: "No answers found for this quiz." });
     }
-};
 
-//Get User's Result
-exports.getResult = async (req, res) => {
-    try {
-        const { user_id, quiz_id } = req.params;
+    const correctAnswers = answers.filter(a => a.isCorrect).length;
+    const totalQuestions = answers.length;
+    const wrongAnswers = totalQuestions - correctAnswers;
+    const score = correctAnswers;
+    const result = new Result({
+      userId,
+      quizId,
+      totalQuestions,
+      correctAnswers,
+      wrongAnswers,
+      score
+    });
 
-        const result = await Result.aggregate([
-            { $match: { user_id: new mongoose.Types.ObjectId(user_id), quiz_id: new mongoose.Types.ObjectId(quiz_id) } },
-            {
-                $project: {
-                    _id: 1,
-                    total_questions: 1,
-                    correct_answers: 1,
-                    incorrect_answers: 1,
-                    score_percentage: 1,
-                    created_at: 1
-                }
-            }
-        ]);
+    await result.save();
 
-        if (!result.length) {
-            return res.status(404).json({ message: "No results found" });
-        }
-
-        res.status(200).json(result[0]);
-
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+    res.status(200).json({
+      message: "Quiz result calculated successfully",
+      result
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error calculating result", error });
+  }
 };

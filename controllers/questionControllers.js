@@ -23,7 +23,7 @@ exports.createQuestion = async (req, res) => {
     }
 };
     
-//Get All Questions with Quiz Type (Using Aggregation)
+//Get All Questions with Quiz Type
 exports.getQuestions = async (req, res) => {
     try {
             const questions = await Question.aggregate([
@@ -104,15 +104,12 @@ exports.getQuestionsByQuizType = async (req, res) => {
 exports.getQuestionById = async (req, res) => {
     try {
         const { id } = req.params;
+        console.log("Requested Question ID:", id);
 
-        console.log("Requested Question ID:", id); // Debugging step
-
-        // Validate if the ID is a valid MongoDB ObjectId
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid question ID" });
         }
 
-        // Debugging: Check if the question exists
         const questionExists = await Question.findById(id);
         console.log("Question Exists:", questionExists);
 
@@ -120,7 +117,6 @@ exports.getQuestionById = async (req, res) => {
             return res.status(404).json({ message: "Question not found" });
         }
 
-        // Perform aggregation
         const question = await Question.aggregate([
             {
                 $match: { _id: new mongoose.Types.ObjectId(id) }
@@ -136,11 +132,10 @@ exports.getQuestionById = async (req, res) => {
             { $unwind: "$quiztype" },
             {
                 $project: {
-                    _id: 1, // Keep ID
+                    _id: 1,
                     question_text: 1,
                     quiztype_name: "$quiztype.quiztype_name",
                     options: 1
-                    // Exclude correct_answer by not mentioning it
                 }
             }
         ]);
@@ -149,7 +144,7 @@ exports.getQuestionById = async (req, res) => {
             return res.status(404).json({ message: "Question not found" });
         }
 
-        res.status(200).json(question[0]); // Return as an object, not an array
+        res.status(200).json(question[0]);
     } catch (error) {
         console.error("Error:", error);
         res.status(500).json({ error: error.message });

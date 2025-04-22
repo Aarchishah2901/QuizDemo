@@ -6,7 +6,6 @@ exports.createRole = async (req, res) => {
     try
     {
         const { name } = req.body;
-
         if (!["admin", "moderator", "user"].includes(name.toLowerCase()))
         {
             return res.status(400).json({ error: "Invalid role name" });

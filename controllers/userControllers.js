@@ -2,7 +2,7 @@ const User = require('../models/User');
 const mongoose = require('mongoose');
 
 
-//Get All Users (Admin Only)
+//Get All Users
 exports.getAllUsers = async (req, res) => {
     try
     {
@@ -160,7 +160,7 @@ exports.updateUser = async (req, res) => {
     }
 };
 
-//Delete User (Admin Only)
+//Delete User
 exports.deleteUser = async (req, res) => {
     try
     {
