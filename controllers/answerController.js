@@ -32,8 +32,8 @@ exports.submitAnswers = async (req, res) => {
 
       console.log("Answer docs to insert:", answerDocs);
       await Answer.insertMany(answerDocs);
-  
       res.status(200).json({ message: "Answers submitted successfully" });
+      answers: answerDocs;
     } catch (error) {
       console.error("Error submitting answers:", error);
       res.status(500).json({ message: "Error submitting answers", error });
