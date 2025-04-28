@@ -33,3 +33,27 @@ exports.calculateResult = async (req, res) => {
     res.status(500).json({ message: "Error calculating result", error });
   }
 };
+
+exports.getResult = async (req, res) => {
+  const { userId, quizId } = req.params;
+
+  console.log("Received userId:", userId);  // Debugging log
+  console.log("Received quizId:", quizId);  // Debugging log
+
+  if (!userId || !quizId) {
+    return res.status(400).json({ message: "userId and quizId are required" });
+  }
+
+  try {
+    const result = await Result.findOne({ userId, quizId });
+
+    if (!result) {
+      return res.status(404).json({ message: "Result not found" });
+    }
+
+    res.status(200).json({ result });
+  } catch (err) {
+    console.error("Error fetching result:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
