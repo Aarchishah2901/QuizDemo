@@ -2,8 +2,11 @@ const Answer = require("../models/answerModel");
 const Question = require("../models/questionModel");
 
 exports.submitAnswers = async (req, res) => {
+  const { userId, quizId, answers } = req.body;
+  if (!userId || !quizId || !Array.isArray(answers)) {
+    return res.status(400).json({ error: 'Invalid request payload' });
+  }
     try {
-      const { userId, quizId, answers } = req.body;
       console.log("Received data:", req.body);
   
       const answerDocs = [];

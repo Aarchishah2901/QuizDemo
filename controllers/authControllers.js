@@ -7,55 +7,106 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-exports.login = async (req, res) => {
+// exports.login = async (req, res) => {
 
-    try
-    {
-      const errors = validationResult(req);
-      if (!errors.isEmpty())
-      {
-          return res.status(400).json({ errors: errors.array() });
-      }
+//     try
+//     {
+//       const errors = validationResult(req);
+//       if (!errors.isEmpty())
+//       {
+//           return res.status(400).json({ errors: errors.array() });
+//       }
 
-      const { email, password } = req.body;
+//       const { email, password } = req.body;
 
-      const userAggregation = await User.aggregate([
-          { $match: { email } },
-          { $project: { _id: 1, email: 1, password: 1, role: 1 } }
-      ]);
+//       const userAggregation = await User.aggregate([
+//           { $match: { email } },
+//           { $project: { _id: 1, email: 1, password: 1, role: 1 } }
+//       ]);
     
 
-      if (userAggregation.length === 0)
-      {
-        return res.status(401).json({ error: 'Invalid credentials' });
+//       if (userAggregation.length === 0)
+//       {
+//         return res.status(401).json({ error: 'Invalid credentials' });
+//       }
+
+//       const user = userAggregation[0];
+
+
+//       const passwordMatch = await bcrypt.compare(password, user.password);
+
+//       if (!passwordMatch)
+//       {
+//           return res.status(401).json({ error: 'Invalid credentials' });
+//       }
+
+//       if (!process.env.JWT_SECRET)
+//       {
+//           return res.status(500).json({ error: "Server configuration error" });
+//       }
+
+//       const token = jwt.sign(
+//           { id: user._id, email: user.email, role: user.role },
+//           process.env.JWT_SECRET,
+//           { expiresIn: '10h' }
+//       );
+
+//       res.status(200).json({ token });
+
+//   } catch (error) {
+//       console.error("Login error:", error);
+//       res.status(500).json({ error: 'Internal server error' });
+//   }
+// };
+
+exports.login = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password } = req.body;
+
+    const userAggregation = await User.aggregate([
+      { $match: { email } },
+      { $project: { _id: 1, email: 1, password: 1, role: 1 } }
+    ]);
+
+    if (userAggregation.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const user = userAggregation[0];
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ error: "Server configuration error" });
+    }
+
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '10h' }
+    );
+
+    res.status(200).json({
+      token,
+      role: user.role,
+      user: {
+        userId: user._id,
+        email: user.email,
+        role: user.role
       }
-
-      const user = userAggregation[0];
-
-
-      const passwordMatch = await bcrypt.compare(password, user.password);
-
-      if (!passwordMatch)
-      {
-          return res.status(401).json({ error: 'Invalid credentials' });
-      }
-
-      if (!process.env.JWT_SECRET)
-      {
-          return res.status(500).json({ error: "Server configuration error" });
-      }
-
-      const token = jwt.sign(
-          { id: user._id, email: user.email, role: user.role },
-          process.env.JWT_SECRET,
-          { expiresIn: '10h' }
-      );
-
-      res.status(200).json({ token });
+    });
 
   } catch (error) {
-      console.error("Login error:", error);
-      res.status(500).json({ error: 'Internal server error' });
+    console.error("Login error:", error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 

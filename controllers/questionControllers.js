@@ -55,7 +55,7 @@ exports.getQuestionsByQuizType = async (req, res) => {
     try {
         const { quiztype_id } = req.params;
 
-        console.log("Requested Quiz Type ID:", quiztype_id); // Debugging step
+        // console.log("Requested Quiz Type ID:", quiztype_id); // Debugging step
 
         // Validate if quiztype_id is a valid ObjectId
         if (!mongoose.Types.ObjectId.isValid(quiztype_id)) {

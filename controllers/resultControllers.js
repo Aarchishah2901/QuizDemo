@@ -37,8 +37,8 @@ exports.calculateResult = async (req, res) => {
 exports.getResult = async (req, res) => {
   const { userId, quizId } = req.params;
 
-  console.log("Received userId:", userId);  // Debugging log
-  console.log("Received quizId:", quizId);  // Debugging log
+  console.log("Received userId:", userId);
+  console.log("Received quizId:", quizId);
 
   if (!userId || !quizId) {
     return res.status(400).json({ message: "userId and quizId are required" });
@@ -51,7 +51,12 @@ exports.getResult = async (req, res) => {
       return res.status(404).json({ message: "Result not found" });
     }
 
-    res.status(200).json({ result });
+    res.status(200).json({
+      totalQuestions: result.totalQuestions,
+      correctAnswers: result.correctAnswers,
+      wrongAnswers: result.wrongAnswers,
+      score: result.score,
+    });
   } catch (err) {
     console.error("Error fetching result:", err);
     res.status(500).json({ message: "Internal Server Error" });
