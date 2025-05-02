@@ -1,5 +1,6 @@
 const Answer = require("../models/answerModel");
 const Result = require("../models/resultModel");
+const Quiz = require("../models/quizModel");
 
 exports.calculateResult = async (req, res) => {
   try {
@@ -60,5 +61,28 @@ exports.getResult = async (req, res) => {
   } catch (err) {
     console.error("Error fetching result:", err);
     res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+exports.getUserQuizHistory = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    const history = await Result.find({ userId }).populate("quizId");
+
+    if (!history || history.length === 0) {
+      return res.status(404).json({ message: "No quiz history found" });
+    }
+
+    res.status(200).json(history);
+  } catch (error) {
+    console.log("Error in getuserhistory", error.message);
+    console.log("Stack", error.status);
+    console.error("Server error in getQuizHistory:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
