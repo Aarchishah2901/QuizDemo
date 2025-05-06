@@ -3,7 +3,6 @@ const router = express.Router();
 const userController = require("../controllers/userControllers");
 const { verifyToken, isAdmin } = require("../middleware/authMiddleware");
 
-// router.post("/register", validateRegistration, userController.registerUser);
 router.get("/users", verifyToken, isAdmin, userController.getAllUsers);
 router.get("/user/:id", verifyToken, isAdmin, userController.getUserById);
 router.put("/user/:id", verifyToken, userController.updateUser);

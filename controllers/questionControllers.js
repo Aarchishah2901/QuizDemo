@@ -55,9 +55,6 @@ exports.getQuestionsByQuizType = async (req, res) => {
     try {
         const { quiztype_id } = req.params;
 
-        // console.log("Requested Quiz Type ID:", quiztype_id); // Debugging step
-
-        // Validate if quiztype_id is a valid ObjectId
         if (!mongoose.Types.ObjectId.isValid(quiztype_id)) {
             return res.status(400).json({ message: "Invalid quiz type ID" });
         }
@@ -80,11 +77,10 @@ exports.getQuestionsByQuizType = async (req, res) => {
             { $unwind: "$quiztype" },
             {
                 $project: {
-                    _id: 1, // Keep Question ID
+                    _id: 1,
                     question_text: 1,
                     quiztype_name: "$quiztype.quiztype_name",
                     options: 1
-                    // Excluding correct_answer by not mentioning it
                 }
             }
         ]);

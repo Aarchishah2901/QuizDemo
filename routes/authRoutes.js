@@ -24,25 +24,6 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Login
-// router.post("/login", async (req, res) => {
-//   const { email, password } = req.body;
-
-//     try {
-//       const user = await User.findOne({ email });
-//       if (!user) return res.status(400).json({ message: "Invalid Credentials" });
-//       const isMatch = await bcrypt.compare(password, user.password);
-//       if (!isMatch) return res.status(400).json({ message: "Invalid Credentials" });
-
-//       const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "10h" });
-//       res.json({ token, role: user.role });
-//     } catch (error) {
-//       console.error("Login error:", error);
-//       res.status(500).json({ error: "Internal server error" });
-//     }
-//   }
-// );
-
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -60,8 +41,8 @@ router.post("/login", async (req, res) => {
       role: user.role,
       user: {
         userId: user._id,
-        email: user.email,
-        role: user.role
+        firstname: user.firstname,
+        email: user.email
       }
     });
   } catch (error) {

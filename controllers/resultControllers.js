@@ -64,49 +64,19 @@ exports.getResult = async (req, res) => {
   }
 };
 
-// exports.getUserQuizHistory = async (req, res) => {
-//   try {
-//     const { userId } = req.params;
-
-//     if (!userId) {
-//       return res.status(400).json({ message: "User ID is required" });
-//     }
-
-//     const history = await Result.find({ userId })
-//     .populate({
-//       path: "quizId",
-//       select: "quiztype_name",
-//       match: { _id: { $ne: null } }
-//     })
-//   .sort({ createdAt: -1 });
-
-//     if (!history || history.length === 0) {
-//       return res.status(404).json({ message: "No quiz history found" });
-//     }
-
-//     history.forEach(result => {
-//       if (!result.quizId) {
-//         console.log(`No quiz found for result with ID: ${result._id}`);
-//       }
-//     });
-
-//     res.status(200).json(history);
-//   } catch (error) {
-//     console.error("Error in getQuizHistory:", error);
-//     res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// };
-
 exports.getUserQuizHistory = async (req, res) => {
   try {
     const { userId } = req.params;
-
+      
     if (!userId) {
       return res.status(400).json({ message: "User ID is required" });
     }
 
     const history = await Result.find({ userId })
-      .populate("quizId", "quiztype_name") // make sure this matches your model
+      .populate({
+        path: 'quizId',
+        select: 'quiztype_name'
+      })
       .sort({ createdAt: -1 });
 
     if (!history || history.length === 0) {

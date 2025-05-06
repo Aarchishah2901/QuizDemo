@@ -1,11 +1,5 @@
 const express = require("express");
-const {
-    countUsers,
-    getUsersWithRoles,
-    countQuestionsByQuizType,
-    getAnswerStats,
-    getUserQuizPerformance
-} = require("../controllers/aggregateController");
+const { countUsers, getUsersWithRoles, countQuestionsByQuizType, getAnswerStats, getUserQuizPerformance } = require("../controllers/aggregateController");
 
 const router = express.Router();
 
