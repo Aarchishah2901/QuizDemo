@@ -76,7 +76,7 @@ const getUserQuizPerformance = async (req, res) => {
                     _id: "$user_id",
                     total_marks: { $sum: "$total_mark" },
                     attempts: { $sum: 1 }
-                }   
+                }
             }
         ]);
         res.json(userPerformance);
