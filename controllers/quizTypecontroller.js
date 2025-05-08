@@ -1,4 +1,5 @@
 const QuizType = require("../models/quizTypeModel");
+const Result = require("../models/resultModel");
 
 exports.createQuizType = async (req,res) => {
     try
@@ -17,17 +18,47 @@ exports.createQuizType = async (req,res) => {
     }
 };
 
+// exports.getQuizTypes = async (req, res) => {
+//     try
+//     {
+//         const quizTypes = await QuizType.find();
+//         res.status(200).json(quizTypes);
+//     }
+//     catch (error)
+//     {
+//         res.status(500).json({ error: error.message });
+//     }
+// };
+
 exports.getQuizTypes = async (req, res) => {
-    try
-    {
-        const quizTypes = await QuizType.find();
-        res.status(200).json(quizTypes);
+    try {
+      const quizTypes = await QuizType.aggregate([
+        {
+          $lookup: {
+            from: "questions",
+            localField: "_id",
+            foreignField: "quiztype_id", // match on ObjectId
+            as: "questions"
+          }
+        },
+        {
+          $addFields: {
+            questionCount: { $size: "$questions" }
+          }
+        },
+        {
+          $project: {
+            quiztype_name: 1,
+            questionCount: 1
+          }
+        }
+      ]);
+  
+      res.status(200).json(quizTypes);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
-    catch (error)
-    {
-        res.status(500).json({ error: error.message });
-    }
-};
+  };
 
 exports.getQuizTypeById = async (req, res) => {
     try
